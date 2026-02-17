@@ -1,77 +1,93 @@
-# Connect Cursor to Jira (no MCP)
+# Cursor to Jira Integration
 
-Use Jira from Cursor via a script and API token. No Atlassian MCP app or site-admin approval needed.
+Talk to Jira directly from Cursor chat. No MCP, no admin approval — just a script and an API token.
 
-## What’s in this folder
+## Setup (3 steps)
 
-- **`scripts/jira-api.mjs`** — Node script to list tasks, get issues, assign (uses Jira REST API).
-- **`.env.example`** — Template for your Jira credentials (domain, email, API token).
-- **`.cursor/rules/jira-tasks.mdc`** — Cursor rule so the AI uses the script when you ask about tasks.
+### 1. Clone into your project
 
-## Setup (for your team)
+```bash
+cd your-project
+git clone https://github.com/your-org/cursor-jira-integration.git
+```
 
-### 1. Copy into your project
+Then move the files into place:
 
-Merge this folder into your **project root**:
+```bash
+cp -r cursor-jira-integration/scripts ./scripts
+cp cursor-jira-integration/.env.example ./.env.example
+mkdir -p .cursor/rules
+cp cursor-jira-integration/.cursor/rules/jira-tasks.mdc .cursor/rules/
+```
 
-- Copy **`scripts/`** into your repo (so you have `scripts/jira-api.mjs`).
-- Copy **`.cursor/rules/jira-tasks.mdc`** into your repo’s **`.cursor/rules/`** (create `.cursor/rules/` if needed).
-- Copy **`.env.example`** to your project root.
-
-Your repo should look like:
+You should end up with:
 
 ```
 your-project/
-  scripts/
-    jira-api.mjs
-  .cursor/
-    rules/
-      jira-tasks.mdc
+  scripts/jira-api.mjs
+  .cursor/rules/jira-tasks.mdc
+  .env            ← you create this next
   .env.example
-  .env          ← you create this in step 2
 ```
 
-### 2. Add your Jira credentials (each person does this once)
+### 2. Create your `.env`
 
-1. Create an API token: [Atlassian API tokens](https://id.atlassian.com/manage-profile/security/api-tokens).
-2. In the **project root**, copy the example and add your values:
-   ```bash
-   cp .env.example .env
-   ```
-3. Edit **`.env`** and set:
-   ```
-   JIRA_DOMAIN=datacomgroup
-   JIRA_EMAIL=your.email@datacom.com
-   JIRA_API_TOKEN=your-token-here
-   ```
-4. Ensure **`.env`** is in `.gitignore` so it’s never committed.
+```bash
+cp .env.example .env
+```
 
-### 3. Test
+Open `.env` and fill in your details:
 
-From the project root:
+```
+JIRA_DOMAIN=datacomgroup
+JIRA_EMAIL=your.email@datacom.com
+JIRA_API_TOKEN=paste-your-token-here
+```
+
+Get your API token here: https://id.atlassian.com/manage-profile/security/api-tokens
+
+Make sure `.env` is in your `.gitignore` — never commit your token.
+
+### 3. Test it
 
 ```bash
 node scripts/jira-api.mjs me
-node scripts/jira-api.mjs search "project = DPH ORDER BY updated DESC"
 ```
 
-### 4. Use in Cursor
+If you see your Jira profile, you're good to go.
 
-In Cursor chat you can ask:
+## Usage
 
-- “What are my Jira tasks?”
-- “Show my DPH issues”
-- “Get details for DPH-123”
-- “Assign DPH-123 to …”
+Just ask Cursor things like:
 
-The rule tells Cursor to run the script and use the output. Run all commands from the **project root** so `.env` is loaded.
+- "What are my Jira tasks?"
+- "Show details for DPH-123"
+- "Create a subtask under DPH-123"
+- "Move DPH-123 to In Progress"
+- "Update the summary on DPH-123"
+- "Assign DPH-123 to me"
+- "Add a comment to DPH-123"
 
-## Customising the project key
+The Cursor rule handles the rest.
 
-The rule uses **DPH** as the Jira project key. To use another project, edit **`.cursor/rules/jira-tasks.mdc`** and replace `DPH` with your project key in the example commands and JQL.
+## Available commands
+
+| Command | What it does |
+|---------|-------------|
+| `me` | Show current user |
+| `search "JQL"` | Search issues by JQL |
+| `get DPH-123` | Get full issue details |
+| `assign DPH-123 <accountId>` | Assign an issue |
+| `create-subtask DPH-123 "summary" [accountId]` | Create a subtask |
+| `update DPH-123 '{"summary":"..."}'` | Edit issue fields |
+| `transition DPH-123 "In Progress"` | Change issue status |
+| `comment DPH-123 "text"` | Add a comment |
+
+## Customising
+
+The rule uses **DPH** as the default project key. To use a different project, edit `.cursor/rules/jira-tasks.mdc` and swap `DPH` for your project key.
 
 ## Requirements
 
-- Node 18+ (for `fetch`).
-- Jira Cloud site (e.g. `datacomgroup.atlassian.net`).
-# cursor-to-jira-integration
+- Node 18+
+- Jira Cloud (e.g. `datacomgroup.atlassian.net`)
