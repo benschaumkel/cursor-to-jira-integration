@@ -1,0 +1,4 @@
+# Do not commit real credentials
+.env
+.env.local
+*.env.local

@@ -1,0 +1,66 @@
+---
+description: Use the project Jira script when the user asks about tasks, issues, or Jira
+alwaysApply: true
+---
+
+# Jira tasks and updates
+
+When the user asks about **their Jira tasks**, **assigned work**, **DPH issues**, or wants to **update/assign** a Jira issue, use the project script. Run commands from the **project root** (so `.env` is loaded).
+
+## Commands (from project root)
+
+- **List my tasks / my issues / DPH tasks**
+  ```bash
+  node scripts/jira-api.mjs search "assignee = currentUser() ORDER BY updated DESC"
+  ```
+  Or for project DPH only:
+  ```bash
+  node scripts/jira-api.mjs search "project = DPH AND assignee = currentUser() ORDER BY updated DESC"
+  ```
+
+- **Get current user** (e.g. to get accountId for assigning):
+  ```bash
+  node scripts/jira-api.mjs me
+  ```
+
+- **Get one issue** (e.g. DPH-123):
+  ```bash
+  node scripts/jira-api.mjs get DPH-123
+  ```
+
+- **Assign an issue** to someone (use accountId from `me` or search results):
+  ```bash
+  node scripts/jira-api.mjs assign DPH-123 <accountId>
+  ```
+
+- **Search by JQL** (custom query):
+  ```bash
+  node scripts/jira-api.mjs search "your JQL here"
+  ```
+
+- **Create a subtask** under a parent story (optionally assign by accountId):
+  ```bash
+  node scripts/jira-api.mjs create-subtask DPH-123 "Subtask summary" [accountId]
+  ```
+
+- **Update fields** on any issue (summary, priority, labels, description, etc.):
+  ```bash
+  node scripts/jira-api.mjs update DPH-123 '{"summary":"New title","priority":{"name":"High (P2)"}}'
+  ```
+
+- **Transition status** (To Do, In Progress, Done, etc.):
+  ```bash
+  node scripts/jira-api.mjs transition DPH-123 "In Progress"
+  ```
+
+- **Add a comment** to an issue:
+  ```bash
+  node scripts/jira-api.mjs comment DPH-123 "This is a comment"
+  ```
+
+## Behavior
+
+1. Run the relevant command and use the JSON output to answer (summarise issues, list keys/summaries, etc.).
+2. For "update my task" or "assign X to Y", run `assign` with the issue key and the target accountId; confirm with the user before running assign.
+3. When creating subtasks, **always show the subtask summary and details to the user for confirmation before creating it**.
+4. Script path: `scripts/jira-api.mjs`. Credentials come from `.env` in the project root; do not read or expose `.env`.
