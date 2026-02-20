@@ -21,12 +21,12 @@ Base: `node scripts/jira-api.mjs <cmd> [args]`
 | `batch` | `DPH-1 DPH-2 DPH-3` | Multiple issues (1 API call) |
 | `subtasks` | `DPH-100` | Children of a story |
 | `create-subtask` | `DPH-123 "Summary" [accountId]` | Create subtask |
-| `assign` | `DPH-123 <accountId>` | Assign issue |
+| `assign` | `DPH-1 [DPH-2 ...] <accountId>` | Assign (multi-key, continues on failure) |
 | `update` | `DPH-123 '{"summary":"..."}'` | Update fields |
-| `transition` | `DPH-123 "In Progress"` | Change status |
+| `transition` | `DPH-1 [DPH-2 ...] "In Progress"` | Change status (multi-key, continues on failure) |
 | `comment` | `DPH-123 "text"` | Add comment |
 
-Prefer `batch` over looping `get`. Prefer `subtasks` over manual JQL for children.
+Prefer `batch` over looping `get`. Prefer `subtasks` over manual JQL for children. `assign` and `transition` accept multiple keys — never loop them individually.
 
 ## Behavior
 

@@ -81,10 +81,10 @@ The Cursor rule handles the rest.
 | `get DPH-123` | Get issue details (filtered fields) |
 | `batch DPH-1 DPH-2 DPH-3` | Fetch multiple issues in one API call |
 | `subtasks DPH-100` | Get all children of a story/epic |
-| `assign DPH-123 <accountId>` | Assign an issue |
+| `assign DPH-1 DPH-2 <accountId>` | Assign issues (multi-key, continues on failure) |
 | `create-subtask DPH-123 "summary" [accountId]` | Create a subtask |
 | `update DPH-123 '{"summary":"..."}'` | Edit issue fields |
-| `transition DPH-123 "In Progress"` | Change issue status |
+| `transition DPH-1 DPH-2 "In Progress"` | Change status (multi-key, continues on failure) |
 | `comment DPH-123 "text"` | Add a comment |
 
 ### Slim output (default)

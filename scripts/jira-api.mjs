@@ -196,17 +196,31 @@ async function main() {
     }
 
     if (cmd === 'assign') {
-      const [key, accountId] = args;
-      if (!key || !accountId) {
-        console.error('Usage: node scripts/jira-api.mjs assign <issue-key> <accountId>');
+      if (args.length < 2) {
+        console.error('Usage: node scripts/jira-api.mjs assign <key> [key...] <accountId>');
         process.exit(1);
       }
-      const res = await request(`/rest/api/3/issue/${key}/assignee`, {
-        method: 'PUT',
-        body: JSON.stringify({ accountId }),
-      });
-      if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
-      console.log('Assigned.');
+      const accountId = args[args.length - 1];
+      const keys = args.slice(0, -1);
+      let failed = 0;
+      for (const key of keys) {
+        try {
+          const res = await request(`/rest/api/3/issue/${key}/assignee`, {
+            method: 'PUT',
+            body: JSON.stringify({ accountId }),
+          });
+          if (!res.ok) {
+            console.error(`${key}: FAILED — ${res.status} ${(await res.text()).slice(0, 200)}`);
+            failed++;
+          } else {
+            console.log(`${key}: Assigned.`);
+          }
+        } catch (e) {
+          console.error(`${key}: FAILED — ${e.message}`);
+          failed++;
+        }
+      }
+      if (failed) process.exitCode = 1;
       return;
     }
 
@@ -228,26 +242,46 @@ async function main() {
     }
 
     if (cmd === 'transition') {
-      const [key, targetStatus] = args;
-      if (!key || !targetStatus) {
-        console.error('Usage: node scripts/jira-api.mjs transition <issue-key> <status-name>');
-        console.error('e.g. node scripts/jira-api.mjs transition DPH-123 "In Progress"');
+      if (args.length < 2) {
+        console.error('Usage: node scripts/jira-api.mjs transition <key> [key...] <status-name>');
+        console.error('e.g. node scripts/jira-api.mjs transition DPH-123 DPH-456 "In Progress"');
         process.exit(1);
       }
-      const tRes = await request(`/rest/api/3/issue/${key}/transitions`);
-      if (!tRes.ok) throw new Error(`${tRes.status} ${await tRes.text()}`);
-      const { transitions } = await tRes.json();
-      const match = transitions.find(t => t.name.toLowerCase() === targetStatus.toLowerCase());
-      if (!match) {
-        const available = transitions.map(t => t.name).join(', ');
-        throw new Error(`No transition to "${targetStatus}". Available: ${available}`);
+      const targetStatus = args[args.length - 1];
+      const keys = args.slice(0, -1);
+      let failed = 0;
+      for (const key of keys) {
+        try {
+          const tRes = await request(`/rest/api/3/issue/${key}/transitions`);
+          if (!tRes.ok) {
+            console.error(`${key}: FAILED — ${tRes.status} ${(await tRes.text()).slice(0, 200)}`);
+            failed++;
+            continue;
+          }
+          const { transitions } = await tRes.json();
+          const match = transitions.find(t => t.name.toLowerCase() === targetStatus.toLowerCase());
+          if (!match) {
+            const available = transitions.map(t => t.name).join(', ');
+            console.error(`${key}: FAILED — no transition to "${targetStatus}". Available: ${available}`);
+            failed++;
+            continue;
+          }
+          const res = await request(`/rest/api/3/issue/${key}/transitions`, {
+            method: 'POST',
+            body: JSON.stringify({ transition: { id: match.id } }),
+          });
+          if (!res.ok) {
+            console.error(`${key}: FAILED — ${res.status} ${(await res.text()).slice(0, 200)}`);
+            failed++;
+          } else {
+            console.log(`${key}: → ${match.name}`);
+          }
+        } catch (e) {
+          console.error(`${key}: FAILED — ${e.message}`);
+          failed++;
+        }
       }
-      const res = await request(`/rest/api/3/issue/${key}/transitions`, {
-        method: 'POST',
-        body: JSON.stringify({ transition: { id: match.id } }),
-      });
-      if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
-      console.log(`Transitioned ${key} to "${match.name}".`);
+      if (failed) process.exitCode = 1;
       return;
     }
 
@@ -278,7 +312,7 @@ async function main() {
     process.exit(1);
   } catch (e) {
     console.error(e.message || e);
-    process.exit(1);
+    process.exitCode = 1;
   }
 }
 
