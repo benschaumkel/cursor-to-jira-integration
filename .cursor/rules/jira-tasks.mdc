@@ -3,32 +3,55 @@ description: Use the project Jira script when the user asks about tasks, issues,
 alwaysApply: false
 ---
 
-# Jira tasks and updates
+# Jira Integration
 
-Script: `scripts/jira-api.mjs`. Run from **project root** (`.env` loaded). Never read or expose `.env`.
+Script: `scripts/jira-api.mjs` — run from project root. Never read or expose `.env`.
 
-Output is **slim by default** (avatarUrls, self, iconUrl, expand, renderedFields stripped). Pass `--raw` for full blob.
+## Token-Saving Workflow
+
+1. **Read `sprint.md` first** if it exists — it's the cached sprint board. Answer from it when possible.
+2. **Only hit the API** if sprint.md is missing, stale, or the user says "refresh" / "sync".
+3. **Output is compact text by default** — not JSON. Only add `--json` when structured data is needed.
+4. **Summarise in 1-3 sentences.** Don't echo full command output back to the user.
+5. **Run `sync` after writes** to keep sprint.md current.
 
 ## Commands
 
-Base: `node scripts/jira-api.mjs <cmd> [args]`
+Base: `node scripts/jira-api.mjs <cmd> [args] [--json] [--limit N]`
 
-| cmd | args | Action |
-|-----|------|--------|
-| `search` | `"assignee = currentUser() ORDER BY updated DESC"` | My issues |
-| `me` | | Current user (accountId) |
-| `get` | `DPH-123` | One issue (filtered fields) |
-| `batch` | `DPH-1 DPH-2 DPH-3` | Multiple issues (1 API call) |
-| `subtasks` | `DPH-100` | Children of a story |
-| `create-subtask` | `DPH-123 "Summary" [accountId]` | Create subtask |
-| `assign` | `DPH-1 [DPH-2 ...] <accountId>` | Assign (multi-key, continues on failure) |
-| `update` | `DPH-123 '{"summary":"..."}'` | Update fields |
-| `transition` | `DPH-1 [DPH-2 ...] "In Progress"` | Change status (multi-key, continues on failure) |
+### Quick reads (use these first)
+
+| cmd | args | What it does |
+|-----|------|-------------|
+| `my` | [custom JQL] | My open tasks sorted by priority (default 20) |
+| `sprint` | [custom JQL] | Current sprint issues |
+| `get` | `DPH-123` | Single issue detail (compact) |
+| `batch` | `DPH-1 DPH-2 DPH-3` | Multiple issues in 1 API call |
+| `subtasks` | `DPH-100` | Children of a parent issue |
+| `search` | `"JQL"` | Custom JQL search |
+| `me` | | Current user (accountId, name) |
+
+### Writes (confirm before running)
+
+| cmd | args | What it does |
+|-----|------|-------------|
+| `assign` | `DPH-1 [DPH-2 ...] <accountId>` | Assign issues |
+| `transition` | `DPH-1 [DPH-2 ...] "In Progress"` | Change status |
+| `update` | `DPH-123 '{"summary":"..."}'` | Edit fields |
+| `create-subtask` | `DPH-123 "Summary" [accountId]` | New subtask |
 | `comment` | `DPH-123 "text"` | Add comment |
 
-Prefer `batch` over looping `get`. Prefer `subtasks` over manual JQL for children. `assign` and `transition` accept multiple keys — never loop them individually.
+### Cache
 
-## Behavior
+| cmd | args | What it does |
+|-----|------|-------------|
+| `sync` | [custom JQL] | Fetch sprint → write `sprint.md` |
 
-- Run command, use JSON to answer (summarise, list keys).
-- Assign: confirm before running. Subtasks: show summary/details for confirmation before creating.
+## Rules
+
+- "What are my tasks?" → use `my`, not `search`.
+- Multiple issues → use `batch`, never loop `get`.
+- Children → use `subtasks`, not manual JQL.
+- `assign` and `transition` accept multiple keys — never loop individually.
+- After any write → run `sync` to keep sprint.md current.
+- Confirm before `assign`, `create-subtask`, or `transition`.
