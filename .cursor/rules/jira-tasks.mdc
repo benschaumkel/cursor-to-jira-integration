@@ -1,29 +1,30 @@
 ---
-description: Use the project Jira script when the user asks about tasks, issues, or Jira
-alwaysApply: true
+description: Use the project Jira script when the user asks about tasks, issues, sprints, or Jira
+alwaysApply: false
 ---
 
 # Jira tasks and updates
 
-For **my tasks**, **assigned work**, or **update/assign** Jira: use project script from **project root** (`.env` loaded). Script: `scripts/jira-api.mjs`. Never read or expose `.env`.
+Script: `scripts/jira-api.mjs`. Run from **project root** (`.env` loaded). Never read or expose `.env`.
 
-Output is **slim by default** (avatarUrls, self, iconUrl, expand, renderedFields stripped). Pass `--raw` for the full Jira blob.
+Output is **slim by default** (avatarUrls, self, iconUrl, expand, renderedFields stripped). Pass `--raw` for full blob.
 
-## Commands (project root)
+## Commands
 
-| Action | Command |
-|--------|--------|
-| My issues | `node scripts/jira-api.mjs search "assignee = currentUser() ORDER BY updated DESC"` |
-| Current user (accountId) | `node scripts/jira-api.mjs me` |
-| One issue | `node scripts/jira-api.mjs get DPH-123` |
-| Multiple issues (1 API call) | `node scripts/jira-api.mjs batch DPH-1 DPH-2 DPH-3` |
-| Children of a story | `node scripts/jira-api.mjs subtasks DPH-100` |
-| JQL search | `node scripts/jira-api.mjs search "JQL"` |
-| Subtask (create) | `node scripts/jira-api.mjs create-subtask DPH-123 "Summary" [accountId]` |
-| Assign | `node scripts/jira-api.mjs assign DPH-123 <accountId>` |
-| Update fields | `node scripts/jira-api.mjs update DPH-123 '{"summary":"..."}'` |
-| Transition | `node scripts/jira-api.mjs transition DPH-123 "In Progress"` |
-| Comment | `node scripts/jira-api.mjs comment DPH-123 "text"` |
+Base: `node scripts/jira-api.mjs <cmd> [args]`
+
+| cmd | args | Action |
+|-----|------|--------|
+| `search` | `"assignee = currentUser() ORDER BY updated DESC"` | My issues |
+| `me` | | Current user (accountId) |
+| `get` | `DPH-123` | One issue (filtered fields) |
+| `batch` | `DPH-1 DPH-2 DPH-3` | Multiple issues (1 API call) |
+| `subtasks` | `DPH-100` | Children of a story |
+| `create-subtask` | `DPH-123 "Summary" [accountId]` | Create subtask |
+| `assign` | `DPH-123 <accountId>` | Assign issue |
+| `update` | `DPH-123 '{"summary":"..."}'` | Update fields |
+| `transition` | `DPH-123 "In Progress"` | Change status |
+| `comment` | `DPH-123 "text"` | Add comment |
 
 Prefer `batch` over looping `get`. Prefer `subtasks` over manual JQL for children.
 
