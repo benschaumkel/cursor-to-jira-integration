@@ -5,62 +5,29 @@ alwaysApply: true
 
 # Jira tasks and updates
 
-When the user asks about **their Jira tasks**, **assigned work**, **DPH issues**, or wants to **update/assign** a Jira issue, use the project script. Run commands from the **project root** (so `.env` is loaded).
+For **my tasks**, **assigned work**, or **update/assign** Jira: use project script from **project root** (`.env` loaded). Script: `scripts/jira-api.mjs`. Never read or expose `.env`.
 
-## Commands (from project root)
+Output is **slim by default** (avatarUrls, self, iconUrl, expand, renderedFields stripped). Pass `--raw` for the full Jira blob.
 
-- **List my tasks / my issues / DPH tasks**
-  ```bash
-  node scripts/jira-api.mjs search "assignee = currentUser() ORDER BY updated DESC"
-  ```
-  Or for project DPH only:
-  ```bash
-  node scripts/jira-api.mjs search "project = DPH AND assignee = currentUser() ORDER BY updated DESC"
-  ```
+## Commands (project root)
 
-- **Get current user** (e.g. to get accountId for assigning):
-  ```bash
-  node scripts/jira-api.mjs me
-  ```
+| Action | Command |
+|--------|--------|
+| My issues | `node scripts/jira-api.mjs search "assignee = currentUser() ORDER BY updated DESC"` |
+| Current user (accountId) | `node scripts/jira-api.mjs me` |
+| One issue | `node scripts/jira-api.mjs get DPH-123` |
+| Multiple issues (1 API call) | `node scripts/jira-api.mjs batch DPH-1 DPH-2 DPH-3` |
+| Children of a story | `node scripts/jira-api.mjs subtasks DPH-100` |
+| JQL search | `node scripts/jira-api.mjs search "JQL"` |
+| Subtask (create) | `node scripts/jira-api.mjs create-subtask DPH-123 "Summary" [accountId]` |
+| Assign | `node scripts/jira-api.mjs assign DPH-123 <accountId>` |
+| Update fields | `node scripts/jira-api.mjs update DPH-123 '{"summary":"..."}'` |
+| Transition | `node scripts/jira-api.mjs transition DPH-123 "In Progress"` |
+| Comment | `node scripts/jira-api.mjs comment DPH-123 "text"` |
 
-- **Get one issue** (e.g. DPH-123):
-  ```bash
-  node scripts/jira-api.mjs get DPH-123
-  ```
-
-- **Assign an issue** to someone (use accountId from `me` or search results):
-  ```bash
-  node scripts/jira-api.mjs assign DPH-123 <accountId>
-  ```
-
-- **Search by JQL** (custom query):
-  ```bash
-  node scripts/jira-api.mjs search "your JQL here"
-  ```
-
-- **Create a subtask** under a parent story (optionally assign by accountId):
-  ```bash
-  node scripts/jira-api.mjs create-subtask DPH-123 "Subtask summary" [accountId]
-  ```
-
-- **Update fields** on any issue (summary, priority, labels, description, etc.):
-  ```bash
-  node scripts/jira-api.mjs update DPH-123 '{"summary":"New title","priority":{"name":"High (P2)"}}'
-  ```
-
-- **Transition status** (To Do, In Progress, Done, etc.):
-  ```bash
-  node scripts/jira-api.mjs transition DPH-123 "In Progress"
-  ```
-
-- **Add a comment** to an issue:
-  ```bash
-  node scripts/jira-api.mjs comment DPH-123 "This is a comment"
-  ```
+Prefer `batch` over looping `get`. Prefer `subtasks` over manual JQL for children.
 
 ## Behavior
 
-1. Run the relevant command and use the JSON output to answer (summarise issues, list keys/summaries, etc.).
-2. For "update my task" or "assign X to Y", run `assign` with the issue key and the target accountId; confirm with the user before running assign.
-3. When creating subtasks, **always show the subtask summary and details to the user for confirmation before creating it**.
-4. Script path: `scripts/jira-api.mjs`. Credentials come from `.env` in the project root; do not read or expose `.env`.
+- Run command, use JSON to answer (summarise, list keys).
+- Assign: confirm before running. Subtasks: show summary/details for confirmation before creating.

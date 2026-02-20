@@ -6,10 +6,15 @@
  * Env: JIRA_DOMAIN (e.g. datacomgroup), JIRA_EMAIL, JIRA_API_TOKEN
  * Create token: https://id.atlassian.com/manage-profile/security/api-tokens
  *
+ * Output is slim by default (avatarUrls, self, iconUrl, expand, renderedFields stripped).
+ * Pass --raw for the full Jira blob.
+ *
  * Usage:
  *   node scripts/jira-api.mjs me
  *   node scripts/jira-api.mjs search "project = DEMO"
  *   node scripts/jira-api.mjs get DEMO-123
+ *   node scripts/jira-api.mjs batch DEMO-1 DEMO-2 DEMO-3
+ *   node scripts/jira-api.mjs subtasks DEMO-100
  *   node scripts/jira-api.mjs assign DEMO-123 <accountId>
  *   node scripts/jira-api.mjs update DEMO-123 '{"summary":"New title","priority":{"name":"High (P2)"}}'
  *   node scripts/jira-api.mjs transition DEMO-123 "In Progress"
@@ -41,6 +46,26 @@ const token = process.env.JIRA_API_TOKEN;
 
 const baseUrl = `https://${domain}.atlassian.net`;
 const auth = Buffer.from(`${email}:${token}`).toString('base64');
+const raw = process.argv.includes('--raw');
+
+const NOISE_KEYS = new Set(['avatarUrls', 'self', 'iconUrl', 'expand', 'renderedFields']);
+
+function slim(obj) {
+  if (Array.isArray(obj)) return obj.map(slim);
+  if (obj && typeof obj === 'object') {
+    const o = {};
+    for (const [k, v] of Object.entries(obj)) {
+      if (NOISE_KEYS.has(k)) continue;
+      o[k] = slim(v);
+    }
+    return o;
+  }
+  return obj;
+}
+
+function out(data) {
+  console.log(JSON.stringify(raw ? data : slim(data), null, 2));
+}
 
 function request(path, options = {}) {
   const url = path.startsWith('http') ? path : `${baseUrl}${path}`;
@@ -64,9 +89,9 @@ async function main() {
     process.exit(1);
   }
 
-  const [cmd, ...args] = process.argv.slice(2);
+  const [cmd, ...args] = process.argv.slice(2).filter(a => a !== '--raw');
   if (!cmd) {
-    console.log('Usage: node scripts/jira-api.mjs <me|search|get|create-subtask|assign|update|transition|comment> [args...]');
+    console.log('Usage: node scripts/jira-api.mjs <me|search|get|batch|subtasks|create-subtask|assign|update|transition|comment> [args...]');
     process.exit(1);
   }
 
@@ -75,7 +100,7 @@ async function main() {
       const res = await request('/rest/api/3/myself');
       if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
       const user = await res.json();
-      console.log(JSON.stringify(user, null, 2));
+      out(user);
       return;
     }
 
@@ -87,7 +112,7 @@ async function main() {
       });
       if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
       const data = await res.json();
-      console.log(JSON.stringify(data, null, 2));
+      out(data);
       return;
     }
 
@@ -97,10 +122,47 @@ async function main() {
         console.error('Usage: node scripts/jira-api.mjs get <issue-key>');
         process.exit(1);
       }
-      const res = await request(`/rest/api/3/issue/${key}`);
+      const fields = raw
+        ? ''
+        : '?fields=summary,status,assignee,priority,description,issuetype,parent,subtasks,updated,labels,components,fixVersions,customfield_10106';
+      const res = await request(`/rest/api/3/issue/${key}${fields}`);
       if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
       const issue = await res.json();
-      console.log(JSON.stringify(issue, null, 2));
+      out(issue);
+      return;
+    }
+
+    if (cmd === 'batch') {
+      const keys = args.filter(a => /^[A-Z]+-\d+$/i.test(a));
+      if (!keys.length) {
+        console.error('Usage: node scripts/jira-api.mjs batch DPH-1 DPH-2 DPH-3 ...');
+        process.exit(1);
+      }
+      const jql = `key in (${keys.join(',')}) ORDER BY key ASC`;
+      const res = await request('/rest/api/3/search/jql', {
+        method: 'POST',
+        body: JSON.stringify({ jql, maxResults: keys.length, fields: ['summary', 'status', 'assignee', 'priority', 'issuetype', 'parent', 'updated'] }),
+      });
+      if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
+      const data = await res.json();
+      out(data);
+      return;
+    }
+
+    if (cmd === 'subtasks') {
+      const parentKey = args[0];
+      if (!parentKey) {
+        console.error('Usage: node scripts/jira-api.mjs subtasks <parent-key>');
+        process.exit(1);
+      }
+      const jql = `parent = ${parentKey} ORDER BY status ASC, key ASC`;
+      const res = await request('/rest/api/3/search/jql', {
+        method: 'POST',
+        body: JSON.stringify({ jql, maxResults: 50, fields: ['summary', 'status', 'assignee', 'priority', 'updated'] }),
+      });
+      if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
+      const data = await res.json();
+      out(data);
       return;
     }
 
@@ -129,7 +191,7 @@ async function main() {
       });
       if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
       const created = await res.json();
-      console.log(JSON.stringify(created, null, 2));
+      out(created);
       return;
     }
 

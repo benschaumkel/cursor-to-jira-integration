@@ -62,6 +62,8 @@ Just ask Cursor things like:
 
 - "What are my Jira tasks?"
 - "Show details for DPH-123"
+- "Show me the subtasks of DPH-100"
+- "Get DPH-1, DPH-2, and DPH-3"
 - "Create a subtask under DPH-123"
 - "Move DPH-123 to In Progress"
 - "Update the summary on DPH-123"
@@ -76,12 +78,24 @@ The Cursor rule handles the rest.
 |---------|-------------|
 | `me` | Show current user |
 | `search "JQL"` | Search issues by JQL |
-| `get DPH-123` | Get full issue details |
+| `get DPH-123` | Get issue details (filtered fields) |
+| `batch DPH-1 DPH-2 DPH-3` | Fetch multiple issues in one API call |
+| `subtasks DPH-100` | Get all children of a story/epic |
 | `assign DPH-123 <accountId>` | Assign an issue |
 | `create-subtask DPH-123 "summary" [accountId]` | Create a subtask |
 | `update DPH-123 '{"summary":"..."}'` | Edit issue fields |
 | `transition DPH-123 "In Progress"` | Change issue status |
 | `comment DPH-123 "text"` | Add a comment |
+
+### Slim output (default)
+
+Output is **slim by default** — noisy Jira fields like `avatarUrls`, `self`, `iconUrl`, `expand`, and `renderedFields` are stripped from every response. This keeps token usage low when Cursor reads the output.
+
+Pass `--raw` to any command to get the full unfiltered Jira response:
+
+```bash
+node scripts/jira-api.mjs get DPH-123 --raw
+```
 
 ## Customising
 
