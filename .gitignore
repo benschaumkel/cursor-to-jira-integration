@@ -3,5 +3,9 @@
 .env.local
 *.env.local
 
+# Local Jira cache — do not commit
+sprint.md
+.sprint-meta.json
+
 # macOS
 .DS_Store
