@@ -1,0 +1,58 @@
+# ─────────────────────────────────────────────────────────
+# Cursor-to-Jira Integration — Configuration
+# Secrets (tokens, emails) belong in .env, not here.
+# ─────────────────────────────────────────────────────────
+
+profiles:
+  default: main
+
+  main:
+    domain: your-company                 # e.g. mycompany → mycompany.atlassian.net
+    browse_domain: your-company          # If browse URLs differ from API domain
+
+    auth:
+      email_env: JIRA_EMAIL             # Name of the env var holding the email
+      token_env: JIRA_API_TOKEN         # Name of the env var holding the token
+
+    jira:
+      default_project: KEY              # e.g. ENG, PROJ, DPH
+      projects:
+        - key: KEY
+          name: My Project
+
+      # Default JQL fragments (override per-command with positional arg)
+      sprint_jql: >-
+        sprint in openSprints() AND project = ${project}
+        ORDER BY priority ASC, status ASC, key ASC
+      my_jql: >-
+        assignee = currentUser() AND statusCategory != Done
+        ORDER BY priority ASC, updated DESC
+
+      # Status display order for sprint sync
+      status_order:
+        - In Progress
+        - Ready for Review
+        - To Do
+        - Done
+
+    confluence:
+      default_space: SPACE              # e.g. ENG, DOCS, IA
+      spaces:
+        - key: SPACE
+          name: My Space
+
+  # ── Example: second Atlassian instance ──────────────────
+  # secondary:
+  #   domain: other-company
+  #   browse_domain: other-company
+  #   auth:
+  #     email_env: SECONDARY_JIRA_EMAIL
+  #     token_env: SECONDARY_JIRA_API_TOKEN
+  #   jira:
+  #     default_project: OC
+  #     projects:
+  #       - key: OC
+  #   confluence:
+  #     default_space: OC
+  #     spaces:
+  #       - key: OC
