@@ -1,8 +1,6 @@
 # Connect Your Jira to Cursor
 
-Talk to Jira from inside Cursor — ask about your tasks, move tickets, and search Confluence, all by typing a question.
-
-No coding experience needed. Just follow the steps below.
+Talk to Jira from inside Cursor — ask about your tasks, move tickets, and search Confluence.
 
 ---
 
