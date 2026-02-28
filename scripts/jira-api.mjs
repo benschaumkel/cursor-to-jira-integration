@@ -23,7 +23,7 @@ function loadEnv() {
 }
 loadEnv()
 
-const domain = process.env.JIRA_DOMAIN || 'datacomgroup'
+const domain = process.env.JIRA_DOMAIN
 const email = process.env.JIRA_EMAIL
 const token = process.env.JIRA_API_TOKEN
 const baseUrl = `https://${domain}.atlassian.net`
@@ -559,7 +559,7 @@ async function main() {
 
       const md = [`# ${sprintName}`, `> Last synced: ${ts}`, '']
 
-      const baseUrlForMd = `https://${domain === 'datacom-digital' ? 'datacomgroup' : domain}.atlassian.net`
+      const baseUrlForMd = `https://${domain}.atlassian.net`
       for (const status of sortedStatuses) {
         const grp = groups[status]
         md.push(`## ${status} (${grp.length})`)
