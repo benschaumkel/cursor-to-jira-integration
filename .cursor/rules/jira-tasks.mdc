@@ -1,5 +1,5 @@
 ---
-description: Use the project Jira script when the user asks about tasks, issues, sprints, or Jira
+description: Use the project Jira script when the user asks about tasks, issues, sprints, or Jira. Triggered by "jira" in terminal or chat.
 alwaysApply: false
 ---
 
@@ -11,10 +11,10 @@ Script: `scripts/jira-api.mjs` — run from project root. Never read or expose `
 
 1. **Check `.sprint-meta.json` first** — if it exists and `valid` is `true`, compare `syncedAt + ttlMs` to the current epoch. If within TTL, read `sprint.md` instead of calling the API.
 2. **Only hit the API** if `.sprint-meta.json` is missing, `valid` is `false`, expired, or the user says "refresh" / "latest" / "sync".
-3. **Output is compact text by default** — not JSON. Only add `--json` when structured data is needed.
-4. **Summarise in 1-3 sentences.** Don't echo full command output back to the user.
-5. **Cache auto-invalidates after writes** — the script sets `valid: false` in `.sprint-meta.json` after any write command. Run `sync` to refresh.
-6. **Run `sync` after writes** to keep sprint.md current.
+3. **Run `sync` after writes** — `node scripts/jira-api.mjs sync` refreshes sprint.md.
+4. **Output is compact text by default** — not JSON. Never add `--json` unless you need structured data for a specific operation.
+5. **Summarise in 1-3 sentences.** Don't echo full command output back to the user.
+6. **Cache auto-invalidates after writes** — the script sets `valid: false` in `.sprint-meta.json` after any write command.
 
 ## Commands
 
@@ -25,7 +25,7 @@ Base: `node scripts/jira-api.mjs <cmd> [args] [--json] [--limit N] [--no-sync]`
 | cmd | args | What it does |
 |-----|------|-------------|
 | `my` | [custom JQL] | My open tasks sorted by priority (default 20) |
-| `sprint` | [custom JQL] | Current sprint issues |
+| `sprint` | [custom JQL] | Current sprint issues for the project |
 | `get` | `DPH-123` | Single issue detail (compact) |
 | `batch` | `DPH-1 DPH-2 DPH-3` | Multiple issues in 1 API call |
 | `subtasks` | `DPH-100` | Children of a parent issue |
