@@ -1,6 +1,6 @@
-# Connect Your Jira to Cursor
+# Connect Your Jira and Confluence to Cursor
 
-Talk to Jira from inside Cursor — ask about your tasks, move tickets, and search Confluence.
+Talk to Jira and Confluence from inside Cursor — ask about your tasks, move tickets, and search Confluence.
 
 ---
 
@@ -54,7 +54,7 @@ You should see project files in the left sidebar.
 
 ### Step 4 — Add your Jira details
 
-Open Cursor's chat panel (`Cmd+L` on Mac, `Ctrl+L` on Windows) and type:
+Open Cursor's chat panel type:
 
 > Create a `.env` file in the root of this project based on `.env.example`. Use these values:
 > - JIRA_DOMAIN = `your-company`
@@ -156,4 +156,4 @@ It should refresh on its own, but you can always say: *"Sync my sprint data"*
 No worries. Go back to [the API tokens page](https://id.atlassian.com/manage-profile/security/api-tokens), create a new one, and paste it into your `.env` file.
 
 **I want to use this in my own project folder**
-Ask Cursor: *"Copy the scripts folder, .cursor/rules folder, and .env file into my project at [path]"*
+Ask Cursor: *"Copy the scripts folder, .cursor/rules folder, and .env file into my project"*
