@@ -37,8 +37,9 @@ export const jiraSyncCommands = [
         return
       }
 
-      const sprintName =
-        issues[0]?.fields?.customfield_10106?.name || 'Current Sprint'
+      const sprintField = issues[0]?.fields?.customfield_10106
+      const sprintObj = Array.isArray(sprintField) ? sprintField[0] : sprintField
+      const sprintName = sprintObj?.name || 'Current Sprint'
 
       // Generate markdown
       const markdown = generateSprintMarkdown({
