@@ -1,0 +1,42 @@
+---
+description: Project context and architecture for cursor-to-jira-integration
+globs:
+  - "**/*"
+alwaysApply: true
+---
+
+# Project Context
+
+This is a CLI integration between Cursor IDE, Jira, and Confluence.
+It lets developers query, update, and sync Jira issues and Confluence
+pages directly from the terminal or Cursor's AI chat.
+
+## Architecture
+
+- `bin/jira-cli.mjs` — Thin entry point. Loads config, builds client, routes commands.
+- `lib/config.mjs` — Merges `config.yaml` (structure) + `.env` (secrets).
+- `lib/client.mjs` — HTTP client factory with retry, backoff, timeout.
+- `lib/jira/` — Jira API operations (search, issues, transitions, users).
+- `lib/confluence/` — Confluence API operations (search, pages, spaces).
+- `lib/formatters/` — Text and Markdown output formatters.
+- `commands/` — Command definitions. Each exports an array of `{ name, execute }`.
+
+## Key Design Rules
+
+1. **Secrets** (tokens, emails) go in `.env` — NEVER in `config.yaml` or code.
+2. **Structure** (domains, projects, spaces) goes in `config.yaml`.
+3. **No hardcoded Atlassian domains or project keys** anywhere in source code.
+4. Every command receives `{ args, flags, client, config }` — no globals.
+5. The HTTP client handles retry/backoff/timeout — commands don't.
+
+## Configuration
+
+- `.env` — Contains `JIRA_EMAIL` and `JIRA_API_TOKEN` (gitignored)
+- `config.yaml` — Contains profiles, domains, project keys, space keys
+- Profiles support multiple Atlassian instances
+
+## When the user asks to set up the project
+
+Follow the instructions in rule `01-setup-guide.mdc` exactly.
+Walk them through step by step. Never assume they know what
+an API token is or how to find their Jira domain.

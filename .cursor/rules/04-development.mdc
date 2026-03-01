@@ -1,0 +1,70 @@
+---
+description: Development rules — use when modifying the codebase
+globs:
+  - "lib/**"
+  - "commands/**"
+  - "bin/**"
+  - "scripts/**"
+alwaysApply: false
+---
+
+# Development Rules
+
+When modifying this codebase, follow these rules strictly.
+
+## Adding a New Command
+
+1. Choose the right file in `commands/`:
+   - `jira-read.mjs` — Read-only Jira queries
+   - `jira-write.mjs` — Jira mutations (create, update, assign, transition)
+   - `jira-sync.mjs` — Sprint sync and cache operations
+   - `confluence-read.mjs` — Confluence queries
+
+2. Add a command object to the exported array:
+   ```javascript
+   {
+     name: 'command-name',
+     async execute({ args, flags, client, config }) {
+       // implementation
+     },
+   }
+    It is automatically registered via commands/index.mjs.
+
+    Add a help entry in lib/cli.mjs → HELP_TEXT.
+
+    Add an intent mapping in .cursor/rules/02-commands-reference.mdc.
+
+Rules for Command Implementations
+
+    NEVER import from dotenv or read process.env directly. All config comes through the config parameter.
+    NEVER hardcode Atlassian domains, project keys, or space keys. Read them from config.
+    ALWAYS use client.requestJson() for API calls that return JSON. Use client.request() only for calls that return 204 No Content.
+    ALWAYS call invalidateSprintCache(config) after write operations.
+    Handle both flags.json (structured output) and text (formatted output).
+
+Rules for API Modules (lib/jira/, lib/confluence/)
+
+    These modules receive a client object, never raw credentials.
+    They return data, they do NOT console.log.
+    They throw ApiError on failure.
+    One function per API operation. No god functions.
+
+Rules for Formatters (lib/formatters/)
+
+    Formatters receive data and return strings. They do NOT call APIs.
+    Formatters do NOT console.log — they return the formatted string.
+    Keep Jira-specific knowledge in lib/jira/transforms.mjs, not in formatters.
+
+Rules for Configuration
+
+    New required env vars: add to .env.example with a comment.
+    New config fields: add to config.yaml with a comment, and handle the missing case with a sensible default in lib/config.mjs.
+    New profiles: add an example (commented out) in config.yaml.
+
+Testing
+
+Run tests with npm test. When adding functionality:
+
+    API modules: test with mocked HTTP responses
+    Formatters: test with fixture data
+    Config: test with sample YAML and env vars

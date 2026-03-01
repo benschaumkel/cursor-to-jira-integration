@@ -1,0 +1,91 @@
+description: Troubleshooting guide — use when commands fail or produce unexpected results
+globs:
+  - "**/*"
+alwaysApply: false
+---
+
+# Troubleshooting
+
+When a user reports an error, diagnose systematically.
+
+## Error: "Required environment variable JIRA_EMAIL is not set"
+
+The `.env` file is missing or incomplete.
+
+1. Check if `.env` exists: look for it in the project root
+2. If missing, create it from `.env.example`
+3. If present, check it has both `JIRA_EMAIL` and `JIRA_API_TOKEN`
+4. Make sure there are no extra spaces around the `=` sign:
+   - WRONG: `JIRA_EMAIL = user@company.com`
+   - RIGHT: `JIRA_EMAIL=user@company.com`
+
+## Error: "HTTP 401 — Basic authentication with passwords is not supported"
+
+The API token is wrong or expired.
+
+1. Confirm the email in `.env` matches their Atlassian login exactly
+2. Have them generate a new token at:
+   https://id.atlassian.com/manage-profile/security/api-tokens
+3. Replace the token in `.env`
+4. Common mistake: pasting the token with trailing whitespace or newline
+
+## Error: "HTTP 403"
+
+Permission issue. Possible causes:
+1. Their Atlassian admin has disabled API access
+2. They don't have access to the specific project
+3. The project key in config.yaml is wrong
+
+Ask: "Can you access this project normally in your browser?"
+
+## Error: "Network error" or "ENOTFOUND"
+
+DNS or connectivity issue.
+
+1. Verify the domain in `config.yaml` is correct
+2. Ask them to open `https://{domain}.atlassian.net` in their browser
+3. Check if they're on a VPN that's required for access
+4. Check if their firewall blocks outbound HTTPS
+
+## Error: "Profile X not found in config.yaml"
+
+They're referencing a profile that doesn't exist.
+
+1. Show them the available profiles in `config.yaml`
+2. Check for typos in the `--profile` flag
+3. Check that `profiles.default` points to a valid profile name
+
+## Error: "config.yaml not found"
+
+They're running the command from the wrong directory,
+or config.yaml was deleted.
+
+1. Make sure they're in the project root directory
+2. If config.yaml is missing, recreate it from the template
+   and walk them through setup again (rule 01)
+
+## Error: "Invalid issue key: X"
+
+Issue keys must be LETTERS-DIGITS format like `DPH-123`.
+
+Common mistakes:
+- Lowercase: `dph-123` → tell them it's auto-uppercased, so check the actual key
+- Missing dash: `DPH123` → needs to be `DPH-123`
+- URL pasted: They pasted the full Jira URL → extract just the key
+
+## Command returns empty results
+
+1. For `my`: They may not have issues assigned. Try `jira-cli sprint` instead.
+2. For `sprint`: The project may not have an active sprint.
+   Try: `jira-cli search "project = DPH ORDER BY updated DESC" --limit 5`
+3. For `conf-search`: Confluence search is eventual — newly created pages
+   take a few minutes to appear in search.
+4. Check if `--project` or the default project in config.yaml is correct.
+
+## "I changed config.yaml but nothing changed"
+
+Config is loaded fresh on every command invocation. If changes aren't
+taking effect:
+1. Check for YAML syntax errors (indentation matters)
+2. Make sure they saved the file
+3. Run `node -e "const y=require('js-yaml');console.log(y.load(require('fs').readFileSync('config.yaml','utf8')))"` to validate parsing

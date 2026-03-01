@@ -1,11 +1,7 @@
-# Do not commit real credentials
+node_modules/
 .env
-.env.local
-*.env.local
-
-# Local Jira cache — do not commit
 sprint.md
 .sprint-meta.json
-
-# macOS
-.DS_Store
+.jira-history/
+.jira-workspace.json
+*.tmp.*

@@ -1,0 +1,70 @@
+---
+description: Command reference — use when user asks how to do something in Jira/Confluence
+globs:
+  - "commands/**"
+  - "bin/**"
+alwaysApply: false
+---
+
+# Command Reference
+
+When a user asks "how do I..." questions about Jira or Confluence,
+translate their intent into the correct command.
+
+## Intent Mapping
+
+| User says... | Command |
+|---|---|
+| "What am I working on?" | `jira-cli my` |
+| "Show me the sprint" | `jira-cli sprint` |
+| "What's the status of X-123?" | `jira-cli get X-123` |
+| "Find issues about login" | `jira-cli search "text ~ 'login'"` |
+| "Move X-123 to In Progress" | `jira-cli transition X-123 "In Progress"` |
+| "Assign X-123 to someone" | First: `jira-cli find-user "their name"` then: `jira-cli assign X-123 <accountId>` |
+| "Create a bug for..." | `jira-cli create "summary" --type Bug` |
+| "Add a comment to X-123" | `jira-cli comment X-123 "comment text"` |
+| "Show Confluence spaces" | `jira-cli spaces` |
+| "Find the onboarding docs" | `jira-cli conf-search "onboarding"` |
+| "Update the sprint board" | `jira-cli sync` |
+
+## Common Patterns
+
+### Searching with JQL
+JQL (Jira Query Language) is how you filter issues. Common examples:
+- All bugs: `jira-cli search "issuetype = Bug AND statusCategory != Done"`
+- High priority: `jira-cli search "priority in (Highest, High) AND assignee = currentUser()"`
+- Recently updated: `jira-cli search "updated >= -7d ORDER BY updated DESC"`
+- By label: `jira-cli search "labels = 'backend'"`
+
+### Getting JSON output
+Add `--json` to any command for structured JSON output:
+```bash
+jira-cli get X-123 --json
+
+This is useful for piping to other tools or when the user wants raw data.
+Working with multiple projects
+
+Use --project to target a different project:
+```
+jira-cli sprint --project PLAT
+jira-cli create "New task" --project PLAT
+```
+Working with multiple Atlassian instances
+
+Use --profile to switch instances:
+```
+jira-cli --profile client-x sprint
+```
+
+Profiles are defined in config.yaml.
+When building JQL for users
+
+    Always wrap string values in quotes: summary ~ "login bug"
+    Use statusCategory not status names for broad filters: statusCategory != Done
+    Use currentUser() for "my" queries
+    Default sort: ORDER BY priority ASC, updated DESC
+    Validate project keys exist in config before suggesting them
+
+---
+
+
