@@ -9,6 +9,7 @@ help:
 setup:
 	npm install
 	@cp -n .env.example .env 2>/dev/null && echo "Created .env — fill in your credentials" || echo ".env already exists"
+	@cp -n config.yaml.example config.yaml 2>/dev/null && echo "Created config.yaml — fill in your domain and project keys" || echo "config.yaml already exists"
 
 test:
 	npm test

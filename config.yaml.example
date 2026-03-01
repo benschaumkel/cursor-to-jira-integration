@@ -2,6 +2,9 @@
 # Cursor-to-Jira Integration — Configuration
 # Secrets (tokens, emails) belong in .env, not here.
 # ─────────────────────────────────────────────────────────
+# Copy this file:  cp config.yaml.example config.yaml
+# Then fill in your values below.
+# ─────────────────────────────────────────────────────────
 
 profiles:
   default: main
