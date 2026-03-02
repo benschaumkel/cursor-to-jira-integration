@@ -37,33 +37,41 @@ JQL (Jira Query Language) is how you filter issues. Common examples:
 - By label: `jira-cli search "labels = 'backend'"`
 
 ### Getting JSON output
+
 Add `--json` to any command for structured JSON output:
+
 ```bash
 jira-cli get X-123 --json
+```
 
 This is useful for piping to other tools or when the user wants raw data.
-Working with multiple projects
 
-Use --project to target a different project:
-```
+### Working with multiple projects
+
+Use `--project` to target a different project:
+
+```bash
 jira-cli sprint --project PLAT
 jira-cli create "New task" --project PLAT
 ```
-Working with multiple Atlassian instances
 
-Use --profile to switch instances:
-```
+### Working with multiple Atlassian instances
+
+Use `--profile` to switch instances:
+
+```bash
 jira-cli --profile client-x sprint
 ```
 
 Profiles are defined in config.yaml.
-When building JQL for users
 
-    Always wrap string values in quotes: summary ~ "login bug"
-    Use statusCategory not status names for broad filters: statusCategory != Done
-    Use currentUser() for "my" queries
-    Default sort: ORDER BY priority ASC, updated DESC
-    Validate project keys exist in config before suggesting them
+### When building JQL for users
+
+- Always wrap string values in quotes: `summary ~ "login bug"`
+- Use `statusCategory` not status names for broad filters: `statusCategory != Done`
+- Use `currentUser()` for "my" queries
+- Default sort: `ORDER BY priority ASC, updated DESC`
+- Validate project keys exist in config before suggesting them
 
 ---
 

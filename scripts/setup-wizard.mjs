@@ -128,13 +128,13 @@ async function main() {
   // Project key
   console.log('')
   console.log(
-    '4. Your Jira issues have a prefix like DPH-123 or ENG-456.',
+    '4. Your Jira issues have a prefix like PROJ-123 or ENG-456.',
   )
   console.log('   What letters do YOUR issues start with?')
   console.log('')
   const project = (
-    await ask('   Project key [DPH]: ')
-  ).toUpperCase() || 'DPH'
+    await ask('   Project key: ')
+  ).toUpperCase()
 
   // Confluence
   console.log('')

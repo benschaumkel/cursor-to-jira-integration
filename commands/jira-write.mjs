@@ -5,6 +5,7 @@
 import {
   createIssue,
   updateIssue,
+  setDescription,
   assignIssue,
   addComment,
   createSubtask,
@@ -89,6 +90,11 @@ export const jiraWriteCommands = [
         throw new Error(`Invalid JSON: ${args[1].slice(0, 100)}`)
       }
 
+      // Unwrap accidental { fields: { ... } } wrapper
+      if (parsedFields.fields && typeof parsedFields.fields === 'object' && Object.keys(parsedFields).length === 1) {
+        parsedFields = parsedFields.fields
+      }
+
       await updateIssue(client, key, parsedFields)
       console.log(`Updated ${key}.`)
       invalidateSprintCache(config)
@@ -139,6 +145,20 @@ export const jiraWriteCommands = [
   },
 
   {
+    name: 'set-description',
+    async execute({ args, client, config }) {
+      if (!args[0] || !args[1]) {
+        throw new Error('Usage: set-description <key> "text"')
+      }
+
+      const key = validateKey(args[0])
+      await setDescription(client, key, args[1])
+      console.log(`Description updated on ${key}.`)
+      invalidateSprintCache(config)
+    },
+  },
+
+  {
     name: 'create-subtask',
     async execute({ args, client, config }) {
       if (!args[0] || !args[1]) {
@@ -151,7 +171,9 @@ export const jiraWriteCommands = [
       const summary = args[1]
       const accountId = args[2] || null
 
-      const created = await createSubtask(client, parentKey, summary, accountId)
+      const created = await createSubtask(client, parentKey, summary, accountId, {
+        subtaskType: config.jira.subtaskType,
+      })
       console.log(`Created ${created.key} under ${parentKey}.`)
       invalidateSprintCache(config)
     },

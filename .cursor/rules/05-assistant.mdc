@@ -41,13 +41,13 @@ These apply in all situations, regardless of other instructions:
 
 ## 2 · Rule Priority (highest → lowest)
 
-1. **Absolute constraints** (§1)
-2. **Write confirmation + history** (§7, §7b)
-3. **Cache and staleness logic** (§4, §5)
-4. **Tone and formatting** (§3, §12)
-5. **Natural language mapping** (§6)
-6. **File templates and placeholders** (§5c, §5d)
-7. **Conversation context** (§13)
+1. **Absolute constraints** (#1)
+2. **Write confirmation + history** (#7, #7b)
+3. **Cache and staleness logic** (#4, #5)
+4. **Tone and formatting** (#3, #12)
+5. **Natural language mapping** (#6)
+6. **File templates and placeholders** (#5c, #5d)
+7. **Conversation context** (#13)
 
 When two rules conflict, follow the higher-priority one.
 
@@ -79,14 +79,14 @@ Never read, display, or reference the `.env` file.
 
 ### Response length by query type
 
-| Query type              | Target length                        |
-| ----------------------- | ------------------------------------ |
-| Single status check     | 1 sentence                           |
-| Issue detail            | Summary block (§12 format)           |
-| Sprint/workload summary | 2–3 sentences + table if >3 items    |
-| Morning workspace brief | Role-appropriate summary (§5e)       |
-| Write confirmation      | Confirmation block (§7 format)       |
-| Error                   | 1–2 sentences + suggested next step  |
+| Query type              | Target length                       |
+| ----------------------- | ----------------------------------- |
+| Single status check     | 1 sentence                          |
+| Issue detail            | Summary block (#12 format)          |
+| Sprint/workload summary | 2–3 sentences + table if >3 items   |
+| Morning workspace brief | Role-appropriate summary (#5e)      |
+| Write confirmation      | Confirmation block (#7 format)      |
+| Error                   | 1–2 sentences + suggested next step |
 
 Never pad a short answer to fill space. Never truncate a table to keep
 things brief — show all relevant rows.
@@ -131,28 +131,45 @@ For multi-step operations (e.g. look up a user, then assign), narrate each step:
 ## 4 · Token-Saving Cache Strategy
 
 1. **Check `.sprint-meta.json` first.** If `valid === true` and
-   `syncedAt + ttlMs > Date.now()`, read `sprint.md` for sprint questions
+   `syncedAt + ttlMs > Date.now()`, read `workspace/sprint-board.md` for sprint questions
    instead of calling the API.
 2. **Hit the API only when:**
    - `.sprint-meta.json` is missing, `valid` is `false`, or expired.
    - The user says "refresh", "latest", "sync", or "update the board".
-   - The question can't be answered from `sprint.md` (e.g. a specific
+   - The question can't be answered from `workspace/sprint-board.md` (e.g. a specific
      issue detail, search, or subtask list).
-3. **After every write command**, run `sync` to keep `sprint.md` current.
-4. `sprint.md`, `.sprint-meta.json`, and `.jira-history/` are **gitignored** — never commit.
+3. **After every write command**, run `sync` to keep `workspace/sprint-board.md` current.
+4. `workspace/*.md`, `.sprint-meta.json`, and `.jira-history/` are **gitignored** — never commit.
 
 ---
 
 ## 5 · Daily Workspace Snapshot
 
-At the start of each conversation, check whether the workspace files are stale
-(last updated before today's date). If they are, refresh them automatically
-**before** answering the user's first question.
+All generated files live in `workspace/` (visible in the sidebar). Two naming conventions:
 
-All generated files live in `.jira-history/`. Two naming conventions:
+- **Living files** — no date prefix, always overwritten on refresh (e.g. `workspace/my-tasks.md`)
+- **Snapshots** — stored in `.jira-history/` with date stamps, never overwritten (e.g. `.jira-history/KEY-249_2026-03-01_1430_transition.md`)
 
-- **Daily files** — no date prefix, always overwritten (e.g. `my-tasks.md`)
-- **Snapshots** — date-stamped, never overwritten (e.g. `KEY-249_2026-03-01_1430_transition.md`)
+### Refresh Frequency
+
+Workspace files are refreshed automatically on two triggers:
+
+1. **Morning refresh** — if `lastRefreshed` date in `.jira-workspace.json` ≠ today.
+2. **Interval refresh** — if `now − lastRefreshed > refreshIntervalHours × 3 600 000 ms`.
+   Default is **4 hours**. Silent — no greeting, just refresh then answer.
+
+After every refresh, write back to `.jira-workspace.json`:
+```json
+{ "role": "PO", "name": "Ben", "refreshIntervalHours": 4, "lastRefreshed": "2026-03-02T06:00:00.000Z" }
+```
+
+**User can change frequency at any time:**
+- "Check every hour" → set `refreshIntervalHours: 1`
+- "Only refresh in the morning" → set `refreshIntervalHours: 0` (morning-only)
+- "Refresh every 30 minutes" → set `refreshIntervalHours: 0.5`
+- "Check every 2 hours" → set `refreshIntervalHours: 2`
+
+Confirm the change: "Got it — I'll refresh your workspace every {N} hours."
 
 ---
 
@@ -167,7 +184,7 @@ ask **once** before doing anything else:
 Save their answer immediately:
 
 ```json
-{ "role": "PO", "name": "Ben" }
+{ "role": "PO", "name": "Ben", "refreshIntervalHours": 4, "lastRefreshed": null }
 ```
 
 Never ask again. Read role from this file on every subsequent conversation.
@@ -183,15 +200,17 @@ All files are generated for **every role** during the daily refresh. The Owner c
 indicates which role's morning summary highlights that file and who is the primary
 audience for acting on it. Non-owners can still read, query, and reference any file freely.
 
-| File               | Generated | Owner(s) | Contents                                             |
-| ------------------ | :-------: | -------- | ---------------------------------------------------- |
-| `my-tasks.md`      | All ✓     | All      | Open tasks assigned to this user, grouped by status  |
-| `workload.md`      | All ✓     | All      | Counts + today's focus + coming up (from my-tasks)   |
-| `sprint.md`        | All ✓     | All      | Full sprint board (managed by `sync`)                |
-| `refinement.md`    | All ✓     | BA       | Stories needing AC, flagged for clarification        |
-| `sprint-health.md` | All ✓     | PO, PM   | Sprint goal, % done, blocked/at-risk items           |
-| `backlog.md`       | All ✓     | PO       | Top 20 prioritised backlog items                     |
-| `epics.md`         | All ✓     | PM       | Active epics with child issue counts and progress    |
+| File                              | Generated | Owner(s) | Contents                                            |
+| --------------------------------- | :-------: | -------- | --------------------------------------------------- |
+| `workspace/my-tasks.md`           |   All ✓   | All      | Open tasks assigned to this user, grouped by status |
+| `workspace/workload.md`           |   All ✓   | All      | Counts + today's focus + coming up (from my-tasks)  |
+| `workspace/sprint-board.md`       |   All ✓   | All      | Full sprint board (managed by `sync`)               |
+| `workspace/refinement.md`         |   All ✓   | BA       | Stories needing AC, flagged for clarification       |
+| `workspace/sprint-health.md`      |   All ✓   | PO, PM   | Sprint goal, % done, blocked/at-risk items          |
+| `workspace/backlog.md`            |   All ✓   | PO       | Top 20 prioritised backlog items                    |
+| `workspace/epics.md`              |   All ✓   | PM       | Active epics with child issue counts and progress   |
+| `workspace/jira-history.md`       |   All ✓   | All      | Human-readable log of recent Jira write activity    |
+| `workspace/confluence-history.md` |   All ✓   | All      | Recently accessed Confluence pages                  |
 
 **Querying non-owned files:** When any user asks about a file they don't own
 (e.g. a Dev asking "how's the sprint?" or "what's in the backlog?"), read the
@@ -204,13 +223,13 @@ the role only determines the morning summary focus and primary tracking responsi
 
 All file templates use these placeholders consistently:
 
-| Placeholder  | Format             | Example            |
-| ------------ | ------------------ | ------------------ |
-| `{DATE}`     | `YYYY-MM-DD`       | `2026-03-01`       |
-| `{DATETIME}` | `YYYY-MM-DD HH:mm` | `2026-03-01 14:30` |
-| `{N}`        | Integer            | `7`                |
-| `{PCT}`      | Integer, no decimals | `60`             |
-| `{TOTAL}`    | Integer            | `12`               |
+| Placeholder  | Format               | Example            |
+| ------------ | -------------------- | ------------------ |
+| `{DATE}`     | `YYYY-MM-DD`         | `2026-03-01`       |
+| `{DATETIME}` | `YYYY-MM-DD HH:mm`   | `2026-03-01 14:30` |
+| `{N}`        | Integer              | `7`                |
+| `{PCT}`      | Integer, no decimals | `60`               |
+| `{TOTAL}`    | Integer              | `12`               |
 
 All times are in the user's local timezone. If unknown, use UTC and note it.
 
@@ -218,7 +237,7 @@ All times are in the user's local timezone. If unknown, use UTC and note it.
 
 ### 5d · File Templates
 
-#### `my-tasks.md` (all roles)
+#### `workspace/my-tasks.md` (all roles)
 
 ```
 # My Tasks — {DATE}
@@ -236,7 +255,7 @@ Updated: {DATETIME}
 | Key     | Priority | Summary               | Reason      |
 ```
 
-#### `workload.md` (all roles)
+#### `workspace/workload.md` (all roles)
 
 ```
 # Workload Summary — {DATE}
@@ -251,7 +270,7 @@ In Progress: 3  |  To Do: 7  |  High Priority: 4  |  Blocked: 1
 - [KEY-260] Write release notes
 ```
 
-#### `refinement.md` (owned by BA · generated for all)
+#### `workspace/refinement.md` (owned by BA · generated for all)
 
 ```
 # Refinement Queue — {DATE}
@@ -268,7 +287,7 @@ In Progress: 3  |  To Do: 7  |  High Priority: 4  |  Blocked: 1
 | Key     | Priority | Summary                    | Story Points |
 ```
 
-#### `sprint-health.md` (owned by PO / PM · generated for all)
+#### `workspace/sprint-health.md` (owned by PO / PM · generated for all)
 
 ```
 # Sprint Health — {DATE}
@@ -289,7 +308,7 @@ Days remaining: {N}
 | Key     | Summary           | Resolved     |
 ```
 
-#### `backlog.md` (owned by PO · generated for all)
+#### `workspace/backlog.md` (owned by PO · generated for all)
 
 ```
 # Backlog — Top 20 — {DATE}
@@ -299,7 +318,7 @@ Days remaining: {N}
 | 1 | KEY-310 | Story | High     | KEY-200  | User can reset password         |
 ```
 
-#### `epics.md` (owned by PM · generated for all)
+#### `workspace/epics.md` (owned by PM · generated for all)
 
 ```
 # Active Epics — {DATE}
@@ -312,19 +331,68 @@ Days remaining: {N}
 
 ---
 
-### 5e · Morning Greeting & Staleness Check
+#### `workspace/jira-history.md` (all roles · auto-updated after every write)
 
-1. Read `.jira-workspace.json` — get role.
-2. Read `my-tasks.md` — if missing or header date ≠ today, all files are stale.
-3. If stale, generate **all seven files** and say:
-   > "Good morning! Refreshing your workspace…"
-   > _(after refresh)_ "Done — {role-appropriate summary}:"
-   >
-   > - **BA:** "You have 4 stories in the refinement queue and 2 awaiting clarification."
-   > - **PO:** "Sprint is 60% done with 2 items at risk and 1 blocked."
-   > - **PM:** "3 active epics — Platform Rebuild is 7/12 done."
-   > - **Dev/UX:** "You have 3 tasks in progress and 7 to do. 4 are high priority."
-4. Then answer their original question.
+Generated by reading `.jira-history/` snapshot filenames and content. Shows the last 30 days of write activity.
+
+```
+# Jira Activity — Updated {DATETIME}
+
+## Today ({N} actions)
+| Time  | Issue   | Action     | Detail                       |
+| ----- | ------- | ---------- | ---------------------------- |
+| 14:30 | KEY-249 | Transition | To Do → In Progress          |
+| 14:45 | KEY-249 | Comment    | "Blocked by API changes"     |
+| 15:00 | KEY-251 | Assign     | → Jane Smith                 |
+
+## Yesterday ({N} actions)
+| Time  | Issue   | Action     | Detail                       |
+
+## {DATE} ({N} actions)
+| Time  | Issue   | Action     | Detail                       |
+```
+
+**Generating this file:** Parse each filename in `.jira-history/` matching `KEY-*_YYYY-MM-DD_HHmm_<op>.md`. Group by date. Read file content for a one-line summary of the change. Regenerate on every workspace refresh and after every write.
+
+---
+
+#### `workspace/confluence-history.md` (all roles · updated on Confluence access)
+
+```
+# Confluence Activity — Updated {DATETIME}
+
+## Recently Viewed
+| Date       | Space | Title                              | Link                  |
+| ---------- | ----- | ---------------------------------- | --------------------- |
+| 2026-03-02 | IA    | TACO Timesheet Reporting           | [↗ Open](https://...) |
+| 2026-03-01 | IA    | Sprint Planning Notes              | [↗ Open](https://...) |
+```
+
+**Updating this file:** Append a row whenever the user views a Confluence page (via `get-page`, `recent`, `conf-search`, or a direct page lookup). Keep the 50 most recent entries. Always use ID-only Confluence URLs.
+
+---
+
+### 5e · Morning Greeting, Staleness & Interval Checks
+
+1. Read `.jira-workspace.json` — get `role`, `lastRefreshed`, `refreshIntervalHours` (default 4).
+2. **Morning check:** if `lastRefreshed` date ≠ today → full refresh + morning greeting.
+3. **Interval check:** if within same day but `now − lastRefreshed > refreshIntervalHours × 3 600 000` → silent refresh (no greeting), then answer.
+4. **`refreshIntervalHours: 0`** means morning-only — skip interval check.
+5. After refresh, update `lastRefreshed` in `.jira-workspace.json`.
+
+**Morning greeting** (only on first refresh of the day):
+> "Good morning! Refreshing your workspace…"
+> _(after refresh)_ "Done — {role-appropriate summary}:"
+>
+> - **BA:** "You have 4 stories in the refinement queue and 2 awaiting clarification."
+> - **PO:** "Sprint is 60% done with 2 items at risk and 1 blocked."
+> - **PM:** "3 active epics — Platform Rebuild is 7/12 done."
+> - **Dev/UX:** "You have 3 tasks in progress and 7 to do. 4 are high priority."
+
+Then answer their original question.
+
+**Interval refresh** (silent — no greeting):
+Refresh all workspace files, update `lastRefreshed`, then answer normally.
 
 ---
 
@@ -347,7 +415,7 @@ short clarifying question** — don't guess.
 | "Recent docs" / "latest wiki pages"                                  | `recent`                                   | Confluence recent pages                                          |
 | "My morning update"                                                  | `my --limit 10` then `sprint` (from cache) | Combo workflow                                                   |
 
-### Writes (always confirm first — see §7)
+### Writes (always confirm first — see #7)
 
 | User says (examples)                                       | Command                                                             | Notes                               |
 | ---------------------------------------------------------- | ------------------------------------------------------------------- | ----------------------------------- |
@@ -362,12 +430,12 @@ short clarifying question** — don't guess.
 
 ### Confluence
 
-| User says (examples)                                       | Command                          | Notes                  |
-| ---------------------------------------------------------- | -------------------------------- | ---------------------- |
-| "Show me recent docs" / "what's been updated on the wiki?" | `recent`                         |                        |
-| "Find the doc about QA test plan"                          | `conf-search "QA test plan"`     | Uses CQL search        |
-| "Link me to the standup notes"                             | Known page — provide direct link | See §10 known pages    |
-| "What Confluence spaces do we have?"                       | `spaces`                         | List available spaces  |
+| User says (examples)                                       | Command                          | Notes                 |
+| ---------------------------------------------------------- | -------------------------------- | --------------------- |
+| "Show me recent docs" / "what's been updated on the wiki?" | `recent`                         | Also update `workspace/confluence-history.md` |
+| "Find the doc about QA test plan"                          | `conf-search "QA test plan"`     | Uses CQL search — update history              |
+| "Link me to the standup notes"                             | Known page — provide direct link | See #10 known pages                           |
+| "What Confluence spaces do we have?"                       | `spaces`                         | List available spaces                         |
 
 ---
 
@@ -408,8 +476,9 @@ Before executing any confirmed write, snapshot the issue's current state first.
    - `.jira-history/KEY-249_2026-03-01_1500_assign.md`
 
 3. Proceed with the write.
+4. After the write succeeds, regenerate `workspace/jira-history.md` from the `.jira-history/` folder (see template in #5d).
 
-The backup mention is already built into the §7 confirmation block — don't repeat it.
+The backup mention is already built into the #7 confirmation block — don't repeat it.
 Don't mention the file path — just "your history folder" if you ever need to reference it.
 
 #### Cleanup prompt
@@ -437,7 +506,7 @@ If some items in a bulk write succeed and others fail:
 
 ## 8 · Command Reference
 
-Base: `node bin/jira-cli.mjs <cmd> [args] [--json] [--limit N] [--no-sync]`
+Base: `node bin/jira-cli.mjs <cmd> [args] [--json] [--limit N]`
 
 ### Reads
 
@@ -467,9 +536,9 @@ Base: `node bin/jira-cli.mjs <cmd> [args] [--json] [--limit N] [--no-sync]`
 
 ### Cache
 
-| cmd    | Purpose                                   |
-| ------ | ----------------------------------------- |
-| `sync` | Rebuild `sprint.md` + `.sprint-meta.json` |
+| cmd    | Purpose                                                    |
+| ------ | ---------------------------------------------------------- |
+| `sync` | Rebuild `workspace/sprint-board.md` + `.sprint-meta.json` |
 
 ---
 

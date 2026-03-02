@@ -57,23 +57,23 @@ jira sprint --limit 50
 ### Single issue detail
 
 ```bash
-node bin/jira-cli.mjs get DPH-123
-jira get DPH-123
-jira get DPH-123 --json
+node bin/jira-cli.mjs get PROJ-123
+jira get PROJ-123
+jira get PROJ-123 --json
 ```
 
 ### Multiple issues at once
 
 ```bash
-node bin/jira-cli.mjs batch DPH-1 DPH-2 DPH-3
-jira batch DPH-1 DPH-2 DPH-3
+node bin/jira-cli.mjs batch PROJ-1 PROJ-2 PROJ-3
+jira batch PROJ-1 PROJ-2 PROJ-3
 ```
 
 ### Subtasks of a parent issue
 
 ```bash
-node bin/jira-cli.mjs subtasks DPH-100
-jira subtasks DPH-100
+node bin/jira-cli.mjs subtasks PROJ-100
+jira subtasks PROJ-100
 ```
 
 ### Search with JQL
@@ -109,23 +109,23 @@ jira find-user "Sarah"
 node bin/jira-cli.mjs create "Fix login bug" --type Bug --priority High
 jira create "Set up staging environment"
 jira create "Write API docs" --type Task
-jira create "Broken auth flow" --type Bug --priority Highest --project DPH
+jira create "Broken auth flow" --type Bug --priority Highest --project PROJ
 ```
 
 ### Create a subtask
 
 ```bash
-node bin/jira-cli.mjs create-subtask DPH-100 "Write unit tests"
-jira create-subtask DPH-100 "Update docs"
+node bin/jira-cli.mjs create-subtask PROJ-100 "Write unit tests"
+jira create-subtask PROJ-100 "Update docs"
 ```
 
 ### Transition (change status)
 
 ```bash
-node bin/jira-cli.mjs transition DPH-123 "In Progress"
-jira transition DPH-123 "Done"
-jira transition DPH-123 "Ready for Review"
-jira transition DPH-1 DPH-2 DPH-3 "In Progress"    # bulk
+node bin/jira-cli.mjs transition PROJ-123 "In Progress"
+jira transition PROJ-123 "Done"
+jira transition PROJ-123 "Ready for Review"
+jira transition PROJ-1 PROJ-2 PROJ-3 "In Progress"    # bulk
 ```
 
 ### Assign an issue
@@ -135,22 +135,22 @@ jira transition DPH-1 DPH-2 DPH-3 "In Progress"    # bulk
 jira find-user "Sarah"
 
 # Then assign:
-node bin/jira-cli.mjs assign DPH-123 <accountId>
-jira assign DPH-1 DPH-2 <accountId>                 # bulk
+node bin/jira-cli.mjs assign PROJ-123 <accountId>
+jira assign PROJ-1 PROJ-2 <accountId>                 # bulk
 ```
 
 ### Update fields
 
 ```bash
-node bin/jira-cli.mjs update DPH-123 '{"summary":"New title"}'
-jira update DPH-123 '{"priority":{"name":"High"}}'
+node bin/jira-cli.mjs update PROJ-123 '{"summary":"New title"}'
+jira update PROJ-123 '{"priority":{"name":"High"}}'
 ```
 
 ### Add a comment
 
 ```bash
-node bin/jira-cli.mjs comment DPH-123 "Blocked by API changes"
-jira comment DPH-123 "Ready for QA"
+node bin/jira-cli.mjs comment PROJ-123 "Blocked by API changes"
+jira comment PROJ-123 "Ready for QA"
 ```
 
 ---
@@ -164,7 +164,7 @@ node bin/jira-cli.mjs sync
 jira sync
 ```
 
-This regenerates `sprint.md` and `.sprint-meta.json` from the Jira API.
+This regenerates `workspace/sprint-board.md` and `.sprint-meta.json` from the Jira API.
 
 ---
 
@@ -182,7 +182,7 @@ jira spaces
 ```bash
 node bin/jira-cli.mjs conf-search "onboarding"
 jira conf-search "QA test plan"
-jira conf-search "release notes" --space IA
+jira conf-search "release notes" --space ENG
 ```
 
 ### Browse a page (top match + children)
@@ -195,29 +195,29 @@ jira browse "architecture"
 ### Page metadata
 
 ```bash
-node bin/jira-cli.mjs page-info 40737570863
-jira page-info "https://datacomgroup.atlassian.net/wiki/spaces/IA/pages/40737570863"
+node bin/jira-cli.mjs page-info 123456789
+jira page-info "https://yourcompany.atlassian.net/wiki/spaces/ENG/pages/123456789"
 ```
 
 ### List child pages
 
 ```bash
-node bin/jira-cli.mjs children 40737570863
-jira children 40737570863
+node bin/jira-cli.mjs children 123456789
+jira children 123456789
 ```
 
 ### Recursive page tree
 
 ```bash
-node bin/jira-cli.mjs page-tree 40737570863
-jira page-tree 40737570863 --limit 3    # depth limit
+node bin/jira-cli.mjs page-tree 123456789
+jira page-tree 123456789 --limit 3    # depth limit
 ```
 
 ### Pages in a space
 
 ```bash
 node bin/jira-cli.mjs space-pages IA
-jira space-pages IA --limit 30
+jira space-pages ENG --limit 30
 ```
 
 ### Pages you've contributed to
@@ -259,9 +259,9 @@ jira sprint
 ### Move a task through its lifecycle
 
 ```bash
-jira transition DPH-123 "In Progress"
-jira transition DPH-123 "Ready for Review"
-jira transition DPH-123 "Done"
+jira transition PROJ-123 "In Progress"
+jira transition PROJ-123 "Ready for Review"
+jira transition PROJ-123 "Done"
 ```
 
 ### Find and assign work
@@ -269,15 +269,15 @@ jira transition DPH-123 "Done"
 ```bash
 jira search "status = 'To Do' AND priority = High"
 jira find-user "Ben"
-jira assign DPH-456 <accountId>
-jira transition DPH-456 "In Progress"
+jira assign PROJ-456 <accountId>
+jira transition PROJ-456 "In Progress"
 ```
 
 ### Explore Confluence documentation
 
 ```bash
 jira spaces
-jira space-pages IA
+jira space-pages ENG
 jira browse "project hub"
-jira page-tree 40737570863 --limit 2
+jira page-tree 123456789 --limit 2
 ```

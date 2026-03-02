@@ -1,9 +1,9 @@
 /**
- * Sprint sync — generates sprint.md from Jira data.
+ * Sprint sync — generates workspace/sprint-board.md from Jira data.
  */
 
 import { join } from 'path'
-import { readFileSync, writeFileSync, existsSync } from 'fs'
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs'
 import { searchJqlAll } from '../lib/jira/search.mjs'
 import { atomicWrite } from '../lib/utils.mjs'
 import {
@@ -51,7 +51,10 @@ export const jiraSyncCommands = [
 
       // Write files atomically
       const root = config.root
-      atomicWrite(join(root, 'sprint.md'), markdown)
+      const workspaceDir = join(root, 'workspace')
+      if (!existsSync(workspaceDir)) mkdirSync(workspaceDir, { recursive: true })
+
+      atomicWrite(join(workspaceDir, 'sprint-board.md'), markdown)
       writeFileSync(
         join(root, '.sprint-meta.json'),
         generateSprintMeta(issues, sprintName),
@@ -61,7 +64,7 @@ export const jiraSyncCommands = [
         issues.map((i) => i.fields?.status?.name),
       ).size
       console.log(
-        `sprint.md updated — ${issues.length} issues, ${statusCount} statuses.`,
+        `workspace/sprint-board.md updated — ${issues.length} issues, ${statusCount} statuses.`,
       )
     },
   },
