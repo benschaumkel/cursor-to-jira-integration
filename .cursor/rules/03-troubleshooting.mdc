@@ -66,21 +66,37 @@ or config.yaml was deleted.
 
 ## Error: "Invalid issue key: X"
 
-Issue keys must be LETTERS-DIGITS format like `DPH-123`.
+Issue keys must be LETTERS-DIGITS format like `PROJ-123`.
 
 Common mistakes:
 - Lowercase: `dph-123` → tell them it's auto-uppercased, so check the actual key
-- Missing dash: `DPH123` → needs to be `DPH-123`
+- Missing dash: `PROJ123` → needs to be `PROJ-123`
 - URL pasted: They pasted the full Jira URL → extract just the key
 
 ## Command returns empty results
 
 1. For `my`: They may not have issues assigned. Try `jira-cli sprint` instead.
 2. For `sprint`: The project may not have an active sprint.
-   Try: `jira-cli search "project = DPH ORDER BY updated DESC" --limit 5`
+   Try: `jira-cli search "project = PROJ ORDER BY updated DESC" --limit 5`
 3. For `conf-search`: Confluence search is eventual — newly created pages
    take a few minutes to appear in search.
 4. Check if `--project` or the default project in config.yaml is correct.
+
+## Confluence URLs — always use ID-only format
+
+When linking a user to a Confluence page, **always use the ID-only URL format**:
+
+```
+✅ CORRECT:  https://yourcompany.atlassian.net/wiki/spaces/ENG/pages/123456789
+❌ WRONG:    https://yourcompany.atlassian.net/wiki/spaces/ENG/pages/123456789/My+Page+Title+With+Spaces
+```
+
+The `page-info` command appends the URL-encoded page title slug to the URL.
+If that slug doesn't exactly match what Confluence expects, the link 404s.
+The ID-only URL always works regardless of the page title.
+
+The page ID is always available from `page-info`, `conf-search`, `children`,
+`browse`, and `space-pages` output. Use just the numeric ID portion.
 
 ## "I changed config.yaml but nothing changed"
 

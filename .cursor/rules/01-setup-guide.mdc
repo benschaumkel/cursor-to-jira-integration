@@ -16,10 +16,10 @@ Ask one question at a time. Wait for their answer before proceeding.
 
 ## Pre-flight Check
 
-First, verify Node.js is installed:``
+First, verify Node.js is installed.
 
-Tell the user to open the terminal in Cursor (Ctrl+ or Cmd+)
-and run: node --version
+Tell the user to open the terminal in Cursor (Ctrl+\` or Cmd+\`)
+and run: `node --version`
 
 - If they get a version >= 18.3.0, proceed.
 - If they get an error or lower version, tell them:
@@ -31,15 +31,16 @@ and run: node --version
 ## Step 1: Install Dependencies
 
 Tell the user to run in terminal:
+
 ```bash
 npm install
-````
-npm install --no-optional
+```
 
-Step 2: Get Their Jira Information
+## Step 2: Get Their Jira Information
 
 Ask the user these questions ONE AT A TIME:
-Question 2a: "What is your Jira URL?"
+
+### Question 2a: "What is your Jira URL?"
 
 They'll say something like:
 
@@ -48,25 +49,29 @@ They'll say something like:
     "I go to jira.mycompany.com" → This is a custom domain. Ask: "When you're in Jira, look at the browser address bar. Does it say something.atlassian.net? What's the 'something' part?"
 
 Store the domain value for Step 4.
-Question 2b: "What is the email address you use to log into Jira?"
+
+### Question 2b: "What is the email address you use to log into Jira?"
 
 This is their Atlassian account email. Store it for Step 3.
-Question 2c: "What Jira project do you mainly work in?"
+
+### Question 2c: "What Jira project do you mainly work in?"
 
 They'll say something like:
 
-    "DPH" or "ENG" → Use this as the project key
-    "The platform project" → Ask: "In Jira, your issues have a prefix like DPH-123 or ENG-456. What are the letters before the dash?"
+    "ENG" or "PROJ" → Use this as the project key
+    "The platform project" → Ask: "In Jira, your issues have a prefix like PROJ-123 or ENG-456. What are the letters before the dash?"
 
 Store the project key for Step 4.
-Question 2d: "Do you use Confluence too?"
+
+### Question 2d: "Do you use Confluence too?"
 
 If yes, ask: "What's the main Confluence space you use?
 It's usually a short code like ENG or DOCS. You can find it
 in the Confluence URL — it looks like /spaces/ENG/..."
 
 If no, that's fine — Confluence features are optional.
-Step 3: Create the API Token
+
+## Step 3: Create the API Token
 
 This is where non-technical users get stuck. Be very explicit:
 
@@ -88,33 +93,33 @@ Tell them:
 
 7. Paste it here (in our chat) and I'll put it in the right place.
 
-⚠️ SECURITY NOTE: When the user pastes their token:
+**SECURITY NOTE:** When the user pastes their token:
 
-    Immediately use it to create the .env file
-    Tell them: "I've saved your token to the .env file. This file is gitignored so it won't be shared. You can delete the token from this chat now."
-    Do NOT repeat the token back to them in chat.
+- Immediately use it to create the .env file
+- Tell them: "I've saved your token to the .env file. This file is gitignored so it won't be shared. You can delete the token from this chat now."
+- Do NOT repeat the token back to them in chat.
 
-Step 4: Create Configuration Files
+## Step 4: Create Configuration Files
 
 Using the information gathered, create TWO files:
-Create .env:
+### Create .env:
 
 ```
 JIRA_EMAIL={their email from 2b}
 JIRA_API_TOKEN={their token from Step 3}
 ```
 
-Update config.yaml:
+### Update config.yaml:
 
 Modify the existing config.yaml with their values:
 
-    Set domain: to their domain from 2a
-    Set browse_domain: to the same domain (unless they said it's different)
-    Set jira.default_project: to their project key from 2c
-    If they use Confluence, set confluence.default_space: from 2d
-    Leave everything else at defaults
+- Set `domain:` to their domain from 2a
+- Set `browse_domain:` to the same domain (unless they said it's different)
+- Set `jira.default_project:` to their project key from 2c
+- If they use Confluence, set `confluence.default_space:` from 2d
+- Leave everything else at defaults
 
-Step 5: Verify It Works
+## Step 5: Verify It Works
 
 Tell them to run:
 
@@ -148,7 +153,8 @@ If it fails with HTTP 403:
 "Your account doesn't have API access. This sometimes happens
 with managed Atlassian accounts. You may need to ask your
 Jira administrator to enable API token access for your account."
-Step 6: Optional Shell Alias
+
+## Step 6: Optional Shell Alias
 
 Ask: "Would you like a shortcut so you can just type jira instead of
 node bin/jira-cli.mjs?"

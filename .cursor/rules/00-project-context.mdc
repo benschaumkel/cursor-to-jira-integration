@@ -21,6 +21,20 @@ pages directly from the terminal or Cursor's AI chat.
 - `lib/formatters/` — Text and Markdown output formatters.
 - `commands/` — Command definitions. Each exports an array of `{ name, execute }`.
 
+## User-Facing Files (visible in sidebar)
+
+- `config.yaml` — User configures this (domain, project keys, space keys)
+- `workspace/` — AI-generated living documents, refreshed every 4 hours (configurable):
+  - `sprint-board.md` — Current sprint (managed by `sync`)
+  - `sprint-health.md` — Sprint goal, progress, blocked items
+  - `my-tasks.md` — Tasks assigned to this user
+  - `workload.md` — Today's focus and coming-up summary
+  - `backlog.md` — Top 20 prioritised backlog items
+  - `epics.md` — Active epics with progress
+  - `refinement.md` — Stories needing acceptance criteria
+  - `jira-history.md` — Recent Jira write activity log
+  - `confluence-history.md` — Recently accessed Confluence pages
+
 ## Key Design Rules
 
 1. **Secrets** (tokens, emails) go in `.env` — NEVER in `config.yaml` or code.

@@ -1,0 +1,29 @@
+{
+  "files.exclude": {
+    "bin/": true,
+    "commands/": true,
+    "lib/": true,
+    "node_modules/": true,
+    "scripts/": true,
+    "advanced/": true,
+    "jira-confluence-sync/": true,
+    "package.json": true,
+    "package-lock.json": true,
+    "Makefile": true,
+    "README.md": true,
+    "SETUP.md": true,
+    "config.yaml.example": true,
+    ".env.example": true,
+    ".gitignore": true,
+    ".jira-workspace.json": true,
+    ".sprint-meta.json": true,
+    ".jira-history": true,
+    ".github": true,
+    ".vscode": true,
+    "sprint.md": true
+  },
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.patterns": {
+    "config.yaml": ".env"
+  }
+}

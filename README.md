@@ -11,11 +11,11 @@ Ask things like:
 
 > "What are my tasks this sprint?"
 > "What's blocking the team?"
-> "Pull up DPH-340 — what's the status?"
+> "Pull up PROJ-340 — what's the status?"
 > "Move that to In Progress"
-> "Assign DPH-249 to Sarah"
+> "Assign PROJ-249 to Sarah"
 > "What's been updated on Confluence this week?"
-> "Summarise the QA test plan for US-1.3"
+> "Summarise the QA test plan"
 
 The AI reads your sprint board, fetches issues, reads Confluence pages, and
 answers in plain English — no raw JSON, no terminal commands shown to you.
@@ -31,7 +31,7 @@ daily workspace files tailored to you:
 | --- | --- | --- |
 | `my-tasks.md` | Everyone | Your open tasks, grouped by status |
 | `workload.md` | Everyone | Today's focus + what's coming up |
-| `sprint.md` | Everyone | Full sprint board (cached locally) |
+| `workspace/sprint-board.md` | Everyone | Full sprint board (cached locally) |
 | `refinement.md` | BA | Stories needing AC, flagged for clarification |
 | `sprint-health.md` | PO / PM | Sprint goal, % done, blocked & at-risk items |
 | `backlog.md` | PO | Top 20 prioritised backlog items |
@@ -129,13 +129,13 @@ Run from project root: `node bin/jira-cli.mjs <command>`
 
 | Command | What it does |
 | --- | --- |
-| `sync` | Refresh local sprint board (`sprint.md`) |
+| `sync` | Refresh local sprint board (`workspace/sprint-board.md`) |
 
 ---
 
 ## How it works
 
-- **Local sprint cache** — `sync` writes your sprint to `sprint.md`. The AI reads this before making any API calls, keeping things fast and token-efficient.
+- **Local sprint cache** — `sync` writes your sprint to `workspace/sprint-board.md`. The AI reads this before making any API calls, keeping things fast and token-efficient.
 - **Role-based workspace** — daily files are generated based on your role so you only see what's relevant.
 - **Write safety** — every write (transition, assign, comment) requires your confirmation before anything happens. The AI also saves a snapshot of the issue's current state to `.jira-history/` before making changes, so you can always see what it looked like before.
 - **No raw output** — the AI translates everything into plain English. No JSON, no stack traces, no account IDs.
